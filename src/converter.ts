@@ -382,7 +382,7 @@ function normalizeHtmlTableCell(input: string) {
 }
 
 function renderMarkdownTableRow(cells: string[]) {
-  return `| ${cells.join(" | ")} |`;
+  return `|${cells.join("|")}|`;
 }
 
 function decodeBasicHtmlEntities(input: string) {

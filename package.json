@@ -5,6 +5,12 @@
   "version": "0.0.1",
   "publisher": "adrian-local",
   "license": "UNLICENSED",
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE.txt",
+    "package.json"
+  ],
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -89,6 +95,7 @@
   "scripts": {
     "build": "tsc -p ./",
     "check": "tsc -p ./ --noEmit",
+    "lint:md": "node scripts/lint-markdown.mjs",
     "package": "vsce package --allow-missing-repository",
     "test:md2doc": "pnpm build && node dist/cli.js md2doc",
     "test:doc2md": "pnpm build && node dist/cli.js doc2md"
@@ -97,6 +104,7 @@
     "@types/node": "^22.10.2",
     "@types/vscode": "^1.90.0",
     "@vscode/vsce": "^3.6.1",
+    "markdownlint": "^0.41.0",
     "typescript": "^5.7.2"
   }
 }

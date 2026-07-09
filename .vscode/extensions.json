@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "dangmai.workspace-default-settings",
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode",
+    "yzhang.markdown-all-in-one",
+    "christian-kohler.npm-intellisense"
+  ]
+}

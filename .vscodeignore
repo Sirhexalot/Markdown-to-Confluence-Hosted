@@ -1,9 +1,0 @@
-src/**
-tests/**
-tsconfig.json
-pnpm-lock.yaml
-pnpm-workspace.yaml
-.git/**
-work/**
-node_modules/**
-.DS_Store

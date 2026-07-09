@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.convertMarkdownFile = convertMarkdownFile;
 exports.convertWordFile = convertWordFile;
+exports.convertMarkdownToWikiMarkupFile = convertMarkdownToWikiMarkupFile;
 const fs = __importStar(require("node:fs/promises"));
 const os = __importStar(require("node:os"));
 const path = __importStar(require("node:path"));
@@ -92,6 +93,20 @@ async function convertWordFile(inputPath, options = {}) {
     finally {
         await fs.rm(tempDirectory, { recursive: true, force: true });
     }
+}
+async function convertMarkdownToWikiMarkupFile(inputPath, options = {}) {
+    if (path.extname(inputPath).toLowerCase() !== ".md") {
+        throw new Error("Please select a Markdown file.");
+    }
+    const inputDirectory = path.dirname(inputPath);
+    const inputBaseName = path.basename(inputPath, ".md");
+    const outputDirectory = resolveOutputDirectory(inputDirectory, options.outputDirectory?.trim() ?? "");
+    const outputPath = path.join(outputDirectory, `${inputBaseName}.wiki`);
+    await fs.mkdir(outputDirectory, { recursive: true });
+    const markdown = await fs.readFile(inputPath, "utf8");
+    const wikiMarkup = convertMarkdownToWikiMarkup(markdown);
+    await fs.writeFile(outputPath, wikiMarkup, "utf8");
+    return outputPath;
 }
 function resolveOutputDirectory(inputDirectory, outputDirectorySetting) {
     if (!outputDirectorySetting) {
@@ -224,7 +239,7 @@ async function convertPandocDocumentToMarkdown(pandocCommand, inputFormat, input
     await fs.writeFile(outputPath, normalizeGeneratedMarkdown(rawMarkdown), "utf8");
 }
 function normalizeGeneratedMarkdown(input) {
-    return normalizeMarkdownTables(convertHtmlTablesToMarkdown(input)
+    return normalizeHeadingLevels(normalizeMarkdownTables(convertHtmlTablesToMarkdown(input)
         .replace(/\r\n/g, "\n")
         .replace(/^\s*•\s+/gm, "- ")
         .replace(/[ \t]*\\[ \t]*(?=\n)/g, "")
@@ -234,7 +249,7 @@ function normalizeGeneratedMarkdown(input) {
         .replace(/[ \t]+\n/g, "\n")
         .replace(/\n{3,}/g, "\n\n")
         .trimEnd()
-        .concat("\n"));
+        .concat("\n")));
 }
 function convertHtmlTablesToMarkdown(input) {
     return input.replace(/<table\b[\s\S]*?<\/table>/gi, (tableHtml) => htmlTableToMarkdown(tableHtml) ?? tableHtml);
@@ -340,6 +355,76 @@ function normalizeMarkdownTables(input) {
 }
 function isMarkdownTableLine(line) {
     return /^\|.*\|\s*$/.test(line);
+}
+function convertMarkdownToWikiMarkup(input) {
+    const lines = input.replace(/\r\n/g, "\n").split("\n");
+    const converted = [];
+    for (let index = 0; index < lines.length;) {
+        if (isMarkdownTableHeader(lines, index)) {
+            const headerCells = parseMarkdownTableRow(lines[index]).map(convertMarkdownInlineToWiki);
+            converted.push(`||${headerCells.join("||")}||`);
+            index += 2;
+            while (index < lines.length && isMarkdownTableLine(lines[index])) {
+                const rowCells = parseMarkdownTableRow(lines[index]).map(convertMarkdownTableCellToWiki);
+                converted.push(`|${rowCells.join("|")}|`);
+                index += 1;
+            }
+            continue;
+        }
+        converted.push(convertMarkdownLineToWiki(lines[index]));
+        index += 1;
+    }
+    return converted.join("\n").trimEnd().concat("\n");
+}
+function isMarkdownTableHeader(lines, index) {
+    return index + 1 < lines.length
+        && isMarkdownTableLine(lines[index])
+        && isMarkdownTableLine(lines[index + 1])
+        && isMarkdownSeparatorRow(parseMarkdownTableRow(lines[index + 1]));
+}
+function convertMarkdownLineToWiki(line) {
+    const headingMatch = /^(#{1,6})\s+(.*)$/.exec(line);
+    if (headingMatch) {
+        return `h${headingMatch[1].length}. ${convertMarkdownInlineToWiki(headingMatch[2])}`;
+    }
+    const unorderedListMatch = /^(\s*)-\s+(.*)$/.exec(line);
+    if (unorderedListMatch) {
+        const depth = Math.floor(unorderedListMatch[1].length / 2) + 1;
+        return `${"*".repeat(depth)} ${convertMarkdownInlineToWiki(unorderedListMatch[2])}`;
+    }
+    const orderedListMatch = /^(\s*)\d+\.\s+(.*)$/.exec(line);
+    if (orderedListMatch) {
+        const depth = Math.floor(orderedListMatch[1].length / 2) + 1;
+        return `${"#".repeat(depth)} ${convertMarkdownInlineToWiki(orderedListMatch[2])}`;
+    }
+    return convertMarkdownInlineToWiki(line);
+}
+function convertMarkdownInlineToWiki(input) {
+    return input
+        .replace(/\\\|/g, "|")
+        .replace(/\*\*(.+?)\*\*/g, "*$1*")
+        .replace(/__(.+?)__/g, "*$1*")
+        .replace(/`([^`]+)`/g, "{{$1}}")
+        .trimEnd();
+}
+function convertMarkdownTableCellToWiki(input) {
+    const converted = convertMarkdownInlineToWiki(input);
+    return converted.length > 0 ? converted : " ";
+}
+function normalizeHeadingLevels(input) {
+    const lines = input.split("\n");
+    let previousLevel = 0;
+    for (let index = 0; index < lines.length; index += 1) {
+        const match = /^(#{1,6})\s+(.*)$/.exec(lines[index]);
+        if (!match) {
+            continue;
+        }
+        const currentLevel = match[1].length;
+        const normalizedLevel = previousLevel === 0 ? currentLevel : Math.min(currentLevel, previousLevel + 1);
+        lines[index] = `${"#".repeat(normalizedLevel)} ${match[2]}`;
+        previousLevel = normalizedLevel;
+    }
+    return lines.join("\n");
 }
 function normalizeMarkdownTableBlock(lines) {
     if (lines.length < 3) {

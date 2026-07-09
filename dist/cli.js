@@ -67,6 +67,13 @@ async function main() {
             console.log(outputPath);
             return;
         }
+        case "md2wiki": {
+            const outputPath = await (0, converter_1.convertMarkdownToWikiMarkupFile)(resolvedInputPath, {
+                outputDirectory: resolveCliOutputDirectory(args["output-dir"])
+            });
+            console.log(outputPath);
+            return;
+        }
         default:
             throw new Error(`Unknown command: ${command}`);
     }
@@ -92,6 +99,7 @@ function printHelp() {
     console.log(`Usage:
   pnpm test:md2doc -- <input.md> [--format doc|docx] [--output-dir <dir>] [--pandoc <path>] [--libreoffice <path>]
   pnpm test:doc2md -- <input.doc|input.docx> [--output-dir <dir>] [--pandoc <path>] [--libreoffice <path>]
+  pnpm test:md2wiki -- <input.md> [--output-dir <dir>]
 `);
 }
 function resolveCliOutputDirectory(outputDirectory) {

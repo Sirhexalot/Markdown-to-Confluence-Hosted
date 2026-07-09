@@ -20,6 +20,7 @@
   "activationEvents": [
     "onCommand:md2doc.convertCurrentFile",
     "onCommand:md2doc.convertFile",
+    "onCommand:md2doc.convertMarkdownToWikiFile",
     "onCommand:md2doc.convertWordCurrentFile",
     "onCommand:md2doc.convertWordFile"
   ],
@@ -35,6 +36,10 @@
         "title": "MD to DOC: Convert File"
       },
       {
+        "command": "md2doc.convertMarkdownToWikiFile",
+        "title": "MD to Wiki Markup: Convert File"
+      },
+      {
         "command": "md2doc.convertWordCurrentFile",
         "title": "DOC to MD: Convert Current File"
       },
@@ -46,7 +51,7 @@
     "menus": {
       "explorer/context": [
         {
-          "command": "md2doc.convertFile",
+          "command": "md2doc.convertMarkdownToWikiFile",
           "when": "resourceExtname == .md",
           "group": "navigation"
         },
@@ -98,7 +103,8 @@
     "lint:md": "node scripts/lint-markdown.mjs",
     "package": "vsce package --allow-missing-repository",
     "test:md2doc": "pnpm build && node dist/cli.js md2doc",
-    "test:doc2md": "pnpm build && node dist/cli.js doc2md"
+    "test:doc2md": "pnpm build && node dist/cli.js doc2md",
+    "test:md2wiki": "pnpm build && node dist/cli.js md2wiki"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

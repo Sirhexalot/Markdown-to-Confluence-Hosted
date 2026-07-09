@@ -1,6 +1,11 @@
 import * as path from "node:path";
 import * as vscode from "vscode";
-import { convertMarkdownFile, convertWordFile, type ExportFormat } from "./converter";
+import {
+  convertMarkdownFile,
+  convertMarkdownToWikiMarkupFile,
+  convertWordFile,
+  type ExportFormat
+} from "./converter";
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
@@ -21,6 +26,15 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       await convertMarkdownToWord(target);
+    }),
+    vscode.commands.registerCommand("md2doc.convertMarkdownToWikiFile", async (resource?: vscode.Uri) => {
+      const target = resource ?? vscode.window.activeTextEditor?.document.uri;
+      if (!target) {
+        vscode.window.showErrorMessage("No Markdown file selected.");
+        return;
+      }
+
+      await convertMarkdownToWikiMarkup(target);
     }),
     vscode.commands.registerCommand("md2doc.convertWordCurrentFile", async () => {
       const editor = vscode.window.activeTextEditor;
@@ -57,6 +71,8 @@ async function convertMarkdownToWord(resource: vscode.Uri) {
   const openAfterExport = config.get<boolean>("openAfterExport", false);
   const exportFormat = config.get<ExportFormat>("exportFormat", "doc");
 
+  let outputPath: string | undefined;
+
   await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
@@ -65,19 +81,21 @@ async function convertMarkdownToWord(resource: vscode.Uri) {
     },
     async () => {
       try {
-        const outputPath = await convertMarkdownFile(resource.fsPath, {
+        outputPath = await convertMarkdownFile(resource.fsPath, {
           exportFormat,
           libreOfficePath: config.get<string>("libreOfficePath", ""),
           outputDirectory: config.get<string>("outputDirectory", ""),
           pandocPath: config.get<string>("pandocPath", "pandoc")
         });
-
-        await showCreatedMessage(outputPath, openAfterExport);
       } catch (error) {
         showError("MD to DOC conversion failed", error);
       }
     }
   );
+
+  if (outputPath) {
+    await showCreatedMessage(outputPath, openAfterExport);
+  }
 }
 
 async function convertWordToMarkdown(resource: vscode.Uri) {
@@ -89,6 +107,8 @@ async function convertWordToMarkdown(resource: vscode.Uri) {
   const config = vscode.workspace.getConfiguration("md2doc");
   const openAfterExport = config.get<boolean>("openAfterExport", false);
 
+  let outputPath: string | undefined;
+
   await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
@@ -97,18 +117,53 @@ async function convertWordToMarkdown(resource: vscode.Uri) {
     },
     async () => {
       try {
-        const outputPath = await convertWordFile(resource.fsPath, {
+        outputPath = await convertWordFile(resource.fsPath, {
           libreOfficePath: config.get<string>("libreOfficePath", ""),
           outputDirectory: config.get<string>("outputDirectory", ""),
           pandocPath: config.get<string>("pandocPath", "pandoc")
         });
-
-        await showCreatedMessage(outputPath, openAfterExport);
       } catch (error) {
         showError("DOC to MD conversion failed", error);
       }
     }
   );
+
+  if (outputPath) {
+    await showCreatedMessage(outputPath, openAfterExport);
+  }
+}
+
+async function convertMarkdownToWikiMarkup(resource: vscode.Uri) {
+  if (resource.scheme !== "file") {
+    vscode.window.showErrorMessage("Only local files are supported.");
+    return;
+  }
+
+  const config = vscode.workspace.getConfiguration("md2doc");
+  const openAfterExport = config.get<boolean>("openAfterExport", false);
+
+  let outputPath: string | undefined;
+
+  await vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: "Converting Markdown to Confluence Wiki Markup",
+      cancellable: false
+    },
+    async () => {
+      try {
+        outputPath = await convertMarkdownToWikiMarkupFile(resource.fsPath, {
+          outputDirectory: config.get<string>("outputDirectory", "")
+        });
+      } catch (error) {
+        showError("MD to Wiki Markup conversion failed", error);
+      }
+    }
+  );
+
+  if (outputPath) {
+    await showCreatedMessage(outputPath, openAfterExport);
+  }
 }
 
 async function showCreatedMessage(outputPath: string, openAfterExport: boolean) {

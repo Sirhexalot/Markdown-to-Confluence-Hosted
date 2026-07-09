@@ -360,6 +360,12 @@ function convertMarkdownToWikiMarkup(input) {
     const lines = input.replace(/\r\n/g, "\n").split("\n");
     const converted = [];
     for (let index = 0; index < lines.length;) {
+        const fencedCodeBlock = parseFencedCodeBlock(lines, index);
+        if (fencedCodeBlock) {
+            converted.push(...fencedCodeBlock.lines);
+            index = fencedCodeBlock.nextIndex;
+            continue;
+        }
         if (isMarkdownTableHeader(lines, index)) {
             const headerCells = parseMarkdownTableRow(lines[index]).map(convertMarkdownInlineToWiki);
             converted.push(`||${headerCells.join("||")}||`);
@@ -383,11 +389,21 @@ function isMarkdownTableHeader(lines, index) {
         && isMarkdownSeparatorRow(parseMarkdownTableRow(lines[index + 1]));
 }
 function convertMarkdownLineToWiki(line) {
+    if (/^\s*$/.test(line)) {
+        return "";
+    }
     const headingMatch = /^(#{1,6})\s+(.*)$/.exec(line);
     if (headingMatch) {
         return `h${headingMatch[1].length}. ${convertMarkdownInlineToWiki(headingMatch[2])}`;
     }
-    const unorderedListMatch = /^(\s*)-\s+(.*)$/.exec(line);
+    if (/^\s{0,3}(?:-{3,}|\*{3,}|(?:\s*_\s*){3,})\s*$/.test(line)) {
+        return "----";
+    }
+    const blockquoteMatch = /^(?:>\s?)+(.*)$/.exec(line);
+    if (blockquoteMatch) {
+        return `bq. ${convertMarkdownInlineToWiki(blockquoteMatch[1])}`;
+    }
+    const unorderedListMatch = /^(\s*)[-*+]\s+(.*)$/.exec(line);
     if (unorderedListMatch) {
         const depth = Math.floor(unorderedListMatch[1].length / 2) + 1;
         return `${"*".repeat(depth)} ${convertMarkdownInlineToWiki(unorderedListMatch[2])}`;
@@ -400,12 +416,47 @@ function convertMarkdownLineToWiki(line) {
     return convertMarkdownInlineToWiki(line);
 }
 function convertMarkdownInlineToWiki(input) {
-    return input
-        .replace(/\\\|/g, "|")
-        .replace(/\*\*(.+?)\*\*/g, "*$1*")
-        .replace(/__(.+?)__/g, "*$1*")
-        .replace(/`([^`]+)`/g, "{{$1}}")
-        .trimEnd();
+    const boldSegments = [];
+    const codeSegments = [];
+    const imageSegments = [];
+    let converted = input
+        .replace(/\\\|/g, "@@ESCAPED_PIPE@@")
+        .replace(/<br\s*\/?>/gi, "\\\\");
+    converted = converted.replace(/`([^`]+)`/g, (_match, code) => {
+        const token = `@@CODE${codeSegments.length}@@`;
+        codeSegments.push(`{{${code}}}`);
+        return token;
+    });
+    converted = converted.replace(/!\[([^\]]*)\]\((\S+?)(?:\s+"[^"]*")?\)/g, (_match, altText, source) => {
+        const token = `@@IMAGE${imageSegments.length}@@`;
+        const trimmedAltText = altText.trim();
+        imageSegments.push(trimmedAltText ? `!${source}|alt=${trimmedAltText}!` : `!${source}!`);
+        return token;
+    });
+    converted = converted.replace(/<span\b[^>]*style=["'][^"']*color\s*:\s*([^;"']+)[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi, (_match, color, text) => `{color:${color.trim()}}${convertMarkdownInlineToWiki(text)}{color}`);
+    converted = converted
+        .replace(/<u>([\s\S]*?)<\/u>/gi, "+$1+")
+        .replace(/\[([^\]]+)\]\((\S+?)(?:\s+"[^"]*")?\)/g, "[$1|$2]")
+        .replace(/<((?:https?|mailto):[^>]+)>/gi, "[$1]")
+        .replace(/\*\*(.+?)\*\*/g, (_match, text) => {
+        const token = `@@BOLD${boldSegments.length}@@`;
+        boldSegments.push(`*${text}*`);
+        return token;
+    })
+        .replace(/__(.+?)__/g, (_match, text) => {
+        const token = `@@BOLD${boldSegments.length}@@`;
+        boldSegments.push(`*${text}*`);
+        return token;
+    })
+        .replace(/~~(.+?)~~/g, "-$1-")
+        .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1_$2_")
+        .replace(/(^|[\s([<{])_([^_\n]+)_($|[\s)\]>}.,!?;:])/g, "$1_$2_$3");
+    converted = converted
+        .replace(/@@BOLD(\d+)@@/g, (_match, index) => boldSegments[Number(index)] ?? "")
+        .replace(/@@IMAGE(\d+)@@/g, (_match, index) => imageSegments[Number(index)] ?? "")
+        .replace(/@@CODE(\d+)@@/g, (_match, index) => codeSegments[Number(index)] ?? "")
+        .replace(/@@ESCAPED_PIPE@@/g, "|");
+    return converted.trimEnd();
 }
 function convertMarkdownTableCellToWiki(input) {
     const converted = convertMarkdownInlineToWiki(input);
@@ -454,6 +505,32 @@ function parseMarkdownTableRow(line) {
 }
 function isMarkdownSeparatorRow(cells) {
     return cells.every((cell) => /^:?-{3,}:?$/.test(cell));
+}
+function parseFencedCodeBlock(lines, startIndex) {
+    const fenceMatch = /^(\s*)(```+|~~~+)\s*([\w.+-]+)?\s*$/.exec(lines[startIndex]);
+    if (!fenceMatch) {
+        return undefined;
+    }
+    const [, indentation, fenceMarker, language] = fenceMatch;
+    const fenceCharacter = fenceMarker[0];
+    const fenceLength = fenceMarker.length;
+    const blockLines = [];
+    let currentIndex = startIndex + 1;
+    while (currentIndex < lines.length) {
+        const candidate = lines[currentIndex];
+        const closingFenceMatch = new RegExp(`^${indentation}${fenceCharacter}{${fenceLength},}\\s*$`).exec(candidate);
+        if (closingFenceMatch) {
+            currentIndex += 1;
+            break;
+        }
+        blockLines.push(candidate);
+        currentIndex += 1;
+    }
+    const openingLine = language ? `{code:language=${language}}` : "{code}";
+    return {
+        lines: [openingLine, ...blockLines, "{code}"],
+        nextIndex: currentIndex
+    };
 }
 async function resolvePandocCommand(configuredPandocPath) {
     const configured = configuredPandocPath || "pandoc";

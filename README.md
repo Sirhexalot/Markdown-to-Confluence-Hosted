@@ -73,9 +73,11 @@ Legacy `Markdown to DOC` command paths still exist in the codebase for regressio
 
 ## Notes for Confluence on-prem
 
-- Markdown works well for headings, lists, and basic formatting.
+- Markdown works well for headings, lists, links, images, blockquotes, fenced code blocks, tables, and common inline formatting.
 - Tables are more reliable when converted to Confluence Wiki markup before import.
 - Empty table cells are emitted in a Confluence-friendly way for on-prem import workflows.
+- Raw HTML colors like `<span style="color:red">Text</span>` and `<u>underline</u>` are converted when they appear in the Markdown source.
+- Confluence-specific macros and the full long tail of wiki syntax are intentionally not covered yet.
 
 ## Summary
 

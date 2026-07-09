@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import {
   convertMarkdownFile,
   convertMarkdownToWikiMarkupFile,
+  convertMarkdownToWikiMarkupString,
   convertWordFile,
   type ExportFormat
 } from "./converter";
@@ -36,6 +37,18 @@ export function activate(context: vscode.ExtensionContext) {
 
       await convertMarkdownToWikiMarkup(target);
     }),
+    vscode.commands.registerCommand(
+      "md2doc.convertMarkdownToWikiClipboard",
+      async (resource?: vscode.Uri) => {
+        const target = resource ?? vscode.window.activeTextEditor?.document.uri;
+        if (!target) {
+          vscode.window.showErrorMessage("No Markdown file selected.");
+          return;
+        }
+
+        await copyMarkdownToWikiMarkupClipboard(target);
+      }
+    ),
     vscode.commands.registerCommand("md2doc.convertWordCurrentFile", async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
@@ -164,6 +177,37 @@ async function convertMarkdownToWikiMarkup(resource: vscode.Uri) {
   if (outputPath) {
     await showCreatedMessage(outputPath, openAfterExport);
   }
+}
+
+async function copyMarkdownToWikiMarkupClipboard(resource: vscode.Uri) {
+  if (resource.scheme !== "file") {
+    vscode.window.showErrorMessage("Only local files are supported.");
+    return;
+  }
+
+  let wikiMarkup: string | undefined;
+
+  await vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: "Converting Markdown to Confluence Wiki Markup and copying to clipboard",
+      cancellable: false
+    },
+    async () => {
+      try {
+        wikiMarkup = await convertMarkdownToWikiMarkupString(resource.fsPath);
+      } catch (error) {
+        showError("MD to Wiki Markup clipboard conversion failed", error);
+      }
+    }
+  );
+
+  if (!wikiMarkup) {
+    return;
+  }
+
+  await vscode.env.clipboard.writeText(wikiMarkup);
+  vscode.window.showInformationMessage("Confluence Wiki markup copied to clipboard.");
 }
 
 async function showCreatedMessage(outputPath: string, openAfterExport: boolean) {

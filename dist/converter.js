@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.convertMarkdownFile = convertMarkdownFile;
 exports.convertWordFile = convertWordFile;
 exports.convertMarkdownToWikiMarkupFile = convertMarkdownToWikiMarkupFile;
+exports.convertMarkdownToWikiMarkupString = convertMarkdownToWikiMarkupString;
 const fs = __importStar(require("node:fs/promises"));
 const os = __importStar(require("node:os"));
 const path = __importStar(require("node:path"));
@@ -103,10 +104,16 @@ async function convertMarkdownToWikiMarkupFile(inputPath, options = {}) {
     const outputDirectory = resolveOutputDirectory(inputDirectory, options.outputDirectory?.trim() ?? "");
     const outputPath = path.join(outputDirectory, `${inputBaseName}.wiki`);
     await fs.mkdir(outputDirectory, { recursive: true });
-    const markdown = await fs.readFile(inputPath, "utf8");
-    const wikiMarkup = convertMarkdownToWikiMarkup(markdown);
+    const wikiMarkup = await convertMarkdownToWikiMarkupString(inputPath);
     await fs.writeFile(outputPath, wikiMarkup, "utf8");
     return outputPath;
+}
+async function convertMarkdownToWikiMarkupString(inputPath) {
+    if (path.extname(inputPath).toLowerCase() !== ".md") {
+        throw new Error("Please select a Markdown file.");
+    }
+    const markdown = await fs.readFile(inputPath, "utf8");
+    return convertMarkdownToWikiMarkup(markdown);
 }
 function resolveOutputDirectory(inputDirectory, outputDirectorySetting) {
     if (!outputDirectorySetting) {

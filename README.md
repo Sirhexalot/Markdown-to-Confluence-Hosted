@@ -29,8 +29,8 @@ No more editing large pages directly in the Confluence wiki editor.
 ### 1. New page: Markdown to Confluence
 
 1. Write your page in Markdown.
-2. In VS Code, run `Markdown to Confluence Wiki: Convert File`.
-3. Open the generated `.wiki` file.
+2. In VS Code, run `Markdown to Confluence Wiki: Convert File` or `Markdown to Confluence Wiki: Copy to Clipboard`.
+3. If you exported to a file, open the generated `.wiki` file.
 4. In Confluence, use `Insert > Markup`.
 5. Select `Confluence Wiki`.
 6. Paste the generated markup.
@@ -53,6 +53,7 @@ The `.doc` input is expected to be a Confluence export, not a generic Word docum
 ## Commands
 
 - `Markdown to Confluence Wiki: Convert File`
+- `Markdown to Confluence Wiki: Copy to Clipboard`
 - `Confluence DOC to Markdown: Convert Current File`
 - `Confluence DOC to Markdown: Convert File`
 

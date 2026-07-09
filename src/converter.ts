@@ -106,10 +106,18 @@ export async function convertMarkdownToWikiMarkupFile(
 
   await fs.mkdir(outputDirectory, { recursive: true });
 
-  const markdown = await fs.readFile(inputPath, "utf8");
-  const wikiMarkup = convertMarkdownToWikiMarkup(markdown);
+  const wikiMarkup = await convertMarkdownToWikiMarkupString(inputPath);
   await fs.writeFile(outputPath, wikiMarkup, "utf8");
   return outputPath;
+}
+
+export async function convertMarkdownToWikiMarkupString(inputPath: string) {
+  if (path.extname(inputPath).toLowerCase() !== ".md") {
+    throw new Error("Please select a Markdown file.");
+  }
+
+  const markdown = await fs.readFile(inputPath, "utf8");
+  return convertMarkdownToWikiMarkup(markdown);
 }
 
 function resolveOutputDirectory(inputDirectory: string, outputDirectorySetting: string) {

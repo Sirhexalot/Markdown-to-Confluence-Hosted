@@ -2,17 +2,17 @@
   "name": "confluence-markdown-bridge",
   "displayName": "Confluence Markdown Bridge",
   "description": "Write Confluence pages in Markdown, convert Markdown to Confluence Wiki markup, and turn Confluence DOC exports back into Markdown.",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "publisher": "Sirhexalot",
   "license": "SEE LICENSE IN LICENSE.txt",
   "icon": "images/icon.png",
-  "homepage": "https://github.com/Sirhexalot/Markdown-to-Confluence-Hosted",
+  "homepage": "https://github.com/Sirhexalot/Confluence-Markdown-Bridge",
   "bugs": {
-    "url": "https://github.com/Sirhexalot/Markdown-to-Confluence-Hosted/issues"
+    "url": "https://github.com/Sirhexalot/Confluence-Markdown-Bridge/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Sirhexalot/Markdown-to-Confluence-Hosted.git"
+    "url": "https://github.com/Sirhexalot/Confluence-Markdown-Bridge.git"
   },
   "galleryBanner": {
     "color": "#123a63",
@@ -41,13 +41,6 @@
     "doc",
     "documentation"
   ],
-  "activationEvents": [
-    "onCommand:md2doc.convertCurrentFile",
-    "onCommand:md2doc.convertFile",
-    "onCommand:md2doc.convertMarkdownToWikiFile",
-    "onCommand:md2doc.convertWordCurrentFile",
-    "onCommand:md2doc.convertWordFile"
-  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -64,6 +57,10 @@
         "title": "Markdown to Confluence Wiki: Convert File"
       },
       {
+        "command": "md2doc.convertMarkdownToWikiClipboard",
+        "title": "Markdown to Confluence Wiki: Copy to Clipboard"
+      },
+      {
         "command": "md2doc.convertWordCurrentFile",
         "title": "Confluence DOC to Markdown: Convert Current File"
       },
@@ -76,6 +73,11 @@
       "explorer/context": [
         {
           "command": "md2doc.convertMarkdownToWikiFile",
+          "when": "resourceExtname == .md",
+          "group": "navigation"
+        },
+        {
+          "command": "md2doc.convertMarkdownToWikiClipboard",
           "when": "resourceExtname == .md",
           "group": "navigation"
         },

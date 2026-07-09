@@ -60,6 +60,13 @@ function activate(context) {
             return;
         }
         await convertMarkdownToWikiMarkup(target);
+    }), vscode.commands.registerCommand("md2doc.convertMarkdownToWikiClipboard", async (resource) => {
+        const target = resource ?? vscode.window.activeTextEditor?.document.uri;
+        if (!target) {
+            vscode.window.showErrorMessage("No Markdown file selected.");
+            return;
+        }
+        await copyMarkdownToWikiMarkupClipboard(target);
     }), vscode.commands.registerCommand("md2doc.convertWordCurrentFile", async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
@@ -162,6 +169,30 @@ async function convertMarkdownToWikiMarkup(resource) {
     if (outputPath) {
         await showCreatedMessage(outputPath, openAfterExport);
     }
+}
+async function copyMarkdownToWikiMarkupClipboard(resource) {
+    if (resource.scheme !== "file") {
+        vscode.window.showErrorMessage("Only local files are supported.");
+        return;
+    }
+    let wikiMarkup;
+    await vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Converting Markdown to Confluence Wiki Markup and copying to clipboard",
+        cancellable: false
+    }, async () => {
+        try {
+            wikiMarkup = await (0, converter_1.convertMarkdownToWikiMarkupString)(resource.fsPath);
+        }
+        catch (error) {
+            showError("MD to Wiki Markup clipboard conversion failed", error);
+        }
+    });
+    if (!wikiMarkup) {
+        return;
+    }
+    await vscode.env.clipboard.writeText(wikiMarkup);
+    vscode.window.showInformationMessage("Confluence Wiki markup copied to clipboard.");
 }
 async function showCreatedMessage(outputPath, openAfterExport) {
     const openAction = "Open";

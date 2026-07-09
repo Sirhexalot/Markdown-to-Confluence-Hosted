@@ -71,11 +71,11 @@ Legacy `Markdown to DOC` command paths still exist in the codebase for regressio
 
 ## Settings
 
-- `md2doc.pandocPath`: path to `pandoc`
-- `md2doc.libreOfficePath`: optional explicit path to LibreOffice / `soffice`
-- `md2doc.exportFormat`: legacy `docx` or `doc` setting
-- `md2doc.outputDirectory`: optional export directory
-- `md2doc.openAfterExport`: open the exported file after conversion
+This extension currently does not require any user-facing settings for the main workflow.
+
+- Markdown to Confluence Wiki writes the `.wiki` file next to the source Markdown file.
+- Confluence `.doc` or `.docx` to Markdown writes the generated `.md` file next to the source document.
+- If `pandoc` is needed, the extension expects it to be available on your system path.
 
 ## Notes for Confluence on-prem
 

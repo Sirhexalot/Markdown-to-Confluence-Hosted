@@ -553,7 +553,7 @@ async function resolvePandocCommand(configuredPandocPath) {
             continue;
         }
     }
-    throw new Error("Pandoc was not found. Install pandoc or set md2doc.pandocPath to the full executable path.");
+    throw new Error("Pandoc was not found. Install pandoc and make sure it is available on your system path.");
 }
 async function resolveDocConverter(configuredLibreOfficePath) {
     const configured = configuredLibreOfficePath.trim();

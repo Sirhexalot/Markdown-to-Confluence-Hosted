@@ -2,7 +2,7 @@
   "name": "confluence-markdown-bridge",
   "displayName": "Confluence Markdown Bridge",
   "description": "Write Confluence pages in Markdown, convert Markdown to Confluence Wiki markup, and turn Confluence DOC exports back into Markdown.",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "publisher": "Sirhexalot",
   "license": "SEE LICENSE IN LICENSE.txt",
   "icon": "images/icon.png",
@@ -87,40 +87,6 @@
           "group": "navigation"
         }
       ]
-    },
-    "configuration": {
-      "title": "Confluence Markdown Bridge",
-      "properties": {
-        "md2doc.pandocPath": {
-          "type": "string",
-          "default": "pandoc",
-          "description": "Path to the pandoc executable."
-        },
-        "md2doc.libreOfficePath": {
-          "type": "string",
-          "default": "",
-          "description": "Optional path to LibreOffice or soffice for legacy .doc export."
-        },
-        "md2doc.exportFormat": {
-          "type": "string",
-          "enum": [
-            "docx",
-            "doc"
-          ],
-          "default": "doc",
-          "description": "Output format. doc is the default; on macOS it uses textutil, on other systems doc may need an external converter."
-        },
-        "md2doc.outputDirectory": {
-          "type": "string",
-          "default": "",
-          "description": "Optional output directory. Leave empty to write the exported file next to the .md file."
-        },
-        "md2doc.openAfterExport": {
-          "type": "boolean",
-          "default": false,
-          "description": "Open the exported .doc file after conversion."
-        }
-      }
     }
   },
   "scripts": {

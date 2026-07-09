@@ -91,29 +91,21 @@ async function convertMarkdownToWord(resource) {
         vscode.window.showErrorMessage("Only local files are supported.");
         return;
     }
-    const config = vscode.workspace.getConfiguration("md2doc");
-    const openAfterExport = config.get("openAfterExport", false);
-    const exportFormat = config.get("exportFormat", "doc");
     let outputPath;
     await vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
-        title: `Converting Markdown to ${exportFormat.toUpperCase()}`,
+        title: "Converting Markdown to DOC",
         cancellable: false
     }, async () => {
         try {
-            outputPath = await (0, converter_1.convertMarkdownFile)(resource.fsPath, {
-                exportFormat,
-                libreOfficePath: config.get("libreOfficePath", ""),
-                outputDirectory: config.get("outputDirectory", ""),
-                pandocPath: config.get("pandocPath", "pandoc")
-            });
+            outputPath = await (0, converter_1.convertMarkdownFile)(resource.fsPath);
         }
         catch (error) {
             showError("MD to DOC conversion failed", error);
         }
     });
     if (outputPath) {
-        await showCreatedMessage(outputPath, openAfterExport);
+        await showCreatedMessage(outputPath);
     }
 }
 async function convertWordToMarkdown(resource) {
@@ -121,8 +113,6 @@ async function convertWordToMarkdown(resource) {
         vscode.window.showErrorMessage("Only local files are supported.");
         return;
     }
-    const config = vscode.workspace.getConfiguration("md2doc");
-    const openAfterExport = config.get("openAfterExport", false);
     let outputPath;
     await vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
@@ -130,18 +120,14 @@ async function convertWordToMarkdown(resource) {
         cancellable: false
     }, async () => {
         try {
-            outputPath = await (0, converter_1.convertWordFile)(resource.fsPath, {
-                libreOfficePath: config.get("libreOfficePath", ""),
-                outputDirectory: config.get("outputDirectory", ""),
-                pandocPath: config.get("pandocPath", "pandoc")
-            });
+            outputPath = await (0, converter_1.convertWordFile)(resource.fsPath);
         }
         catch (error) {
             showError("DOC to MD conversion failed", error);
         }
     });
     if (outputPath) {
-        await showCreatedMessage(outputPath, openAfterExport);
+        await showCreatedMessage(outputPath);
     }
 }
 async function convertMarkdownToWikiMarkup(resource) {
@@ -149,8 +135,6 @@ async function convertMarkdownToWikiMarkup(resource) {
         vscode.window.showErrorMessage("Only local files are supported.");
         return;
     }
-    const config = vscode.workspace.getConfiguration("md2doc");
-    const openAfterExport = config.get("openAfterExport", false);
     let outputPath;
     await vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
@@ -158,16 +142,14 @@ async function convertMarkdownToWikiMarkup(resource) {
         cancellable: false
     }, async () => {
         try {
-            outputPath = await (0, converter_1.convertMarkdownToWikiMarkupFile)(resource.fsPath, {
-                outputDirectory: config.get("outputDirectory", "")
-            });
+            outputPath = await (0, converter_1.convertMarkdownToWikiMarkupFile)(resource.fsPath);
         }
         catch (error) {
             showError("MD to Wiki Markup conversion failed", error);
         }
     });
     if (outputPath) {
-        await showCreatedMessage(outputPath, openAfterExport);
+        await showCreatedMessage(outputPath);
     }
 }
 async function copyMarkdownToWikiMarkupClipboard(resource) {
@@ -194,10 +176,10 @@ async function copyMarkdownToWikiMarkupClipboard(resource) {
     await vscode.env.clipboard.writeText(wikiMarkup);
     vscode.window.showInformationMessage("Confluence Wiki markup copied to clipboard.");
 }
-async function showCreatedMessage(outputPath, openAfterExport) {
+async function showCreatedMessage(outputPath) {
     const openAction = "Open";
-    const selection = await vscode.window.showInformationMessage(`Created ${path.basename(outputPath)}`, ...(openAfterExport ? [openAction] : []));
-    if (openAfterExport || selection === openAction) {
+    const selection = await vscode.window.showInformationMessage(`Created ${path.basename(outputPath)}`, openAction);
+    if (selection === openAction) {
         await vscode.env.openExternal(vscode.Uri.file(outputPath));
     }
 }

@@ -714,7 +714,7 @@ async function resolvePandocCommand(configuredPandocPath: string) {
   }
 
   throw new Error(
-    "Pandoc was not found. Install pandoc or set md2doc.pandocPath to the full executable path."
+    "Pandoc was not found. Install pandoc and make sure it is available on your system path."
   );
 }
 

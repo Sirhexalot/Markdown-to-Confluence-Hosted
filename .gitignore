@@ -2,3 +2,4 @@ node_modules
 tests/.tmp-cli
 work/
 test/
+.vsix

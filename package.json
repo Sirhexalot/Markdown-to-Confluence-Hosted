@@ -1,0 +1,102 @@
+{
+  "name": "md2doc-vscode",
+  "displayName": "MD to DOC",
+  "description": "Convert Markdown files to Word documents for Confluence and legacy workflows.",
+  "version": "0.0.1",
+  "publisher": "adrian-local",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:md2doc.convertCurrentFile",
+    "onCommand:md2doc.convertFile",
+    "onCommand:md2doc.convertWordCurrentFile",
+    "onCommand:md2doc.convertWordFile"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "md2doc.convertCurrentFile",
+        "title": "MD to DOC: Convert Current File"
+      },
+      {
+        "command": "md2doc.convertFile",
+        "title": "MD to DOC: Convert File"
+      },
+      {
+        "command": "md2doc.convertWordCurrentFile",
+        "title": "DOC to MD: Convert Current File"
+      },
+      {
+        "command": "md2doc.convertWordFile",
+        "title": "DOC to MD: Convert File"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "md2doc.convertFile",
+          "when": "resourceExtname == .md",
+          "group": "navigation"
+        },
+        {
+          "command": "md2doc.convertWordFile",
+          "when": "resourceExtname == .doc || resourceExtname == .docx",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "MD to DOC",
+      "properties": {
+        "md2doc.pandocPath": {
+          "type": "string",
+          "default": "pandoc",
+          "description": "Path to the pandoc executable."
+        },
+        "md2doc.libreOfficePath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional path to LibreOffice or soffice for legacy .doc export."
+        },
+        "md2doc.exportFormat": {
+          "type": "string",
+          "enum": [
+            "docx",
+            "doc"
+          ],
+          "default": "doc",
+          "description": "Output format. doc is the default; on macOS it uses textutil, on other systems doc may need an external converter."
+        },
+        "md2doc.outputDirectory": {
+          "type": "string",
+          "default": "",
+          "description": "Optional output directory. Leave empty to write the exported file next to the .md file."
+        },
+        "md2doc.openAfterExport": {
+          "type": "boolean",
+          "default": false,
+          "description": "Open the exported .doc file after conversion."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p ./",
+    "check": "tsc -p ./ --noEmit",
+    "package": "vsce package --allow-missing-repository",
+    "test:md2doc": "pnpm build && node dist/cli.js md2doc",
+    "test:doc2md": "pnpm build && node dist/cli.js doc2md"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.6.1",
+    "typescript": "^5.7.2"
+  }
+}

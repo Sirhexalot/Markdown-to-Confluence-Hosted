@@ -3,4 +3,4 @@ tests/.tmp-cli
 tests/
 work/
 test/
-.vsix
+*.vsix

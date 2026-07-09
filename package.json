@@ -2,7 +2,7 @@
   "name": "confluence-markdown-bridge",
   "displayName": "Confluence Markdown Bridge",
   "description": "Write Confluence pages in Markdown, convert Markdown to Confluence Wiki markup, and turn Confluence DOC exports back into Markdown.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "Sirhexalot",
   "license": "SEE LICENSE IN LICENSE.txt",
   "icon": "images/icon.png",
